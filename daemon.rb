@@ -5,12 +5,11 @@ require 'daemons'
 
 options = {
    :app_name   => "hackprintd",
-   :ARGV       => ['start', '-f'],
    :dir_mode   => :script,
    :dir        => 'pids',
    :multiple   => false,
    :ontop      => false,
-   :mode       => :exec,
+   :mode       => :load,
    :backtrace  => true,
    :monitor    => true
  }

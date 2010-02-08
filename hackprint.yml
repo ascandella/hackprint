@@ -1,0 +1,8 @@
+lions:
+	pipe:	/opt/hackprint/authpipe
+	serial:	/dev/ttyUSB0
+
+brooke:
+	pipe:	/Users/echo/Document/Code/workspace/hackprint/authpipe
+	serial: /dev/ttyUSB0
+

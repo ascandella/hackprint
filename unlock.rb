@@ -1,0 +1,19 @@
+#!/usr/bin/env ruby
+# Sends the unlock password to the daemon
+
+require 'rubygems'
+require 'yaml'
+
+
+@config = YAML.load_file(File.join(File.dirname(__FILE__), '/hackprint.yml'))
+@config = @config[@config["station"]]
+
+@password = @config["pass"]
+
+begin
+  File.open(@config["authpipe"], File::NONBLOCK | File::WRONLY) do |f|
+    f.write(@password)
+  end
+rescue Exception => ex
+  STDERR.puts "ERROR: Daemon process not listening"
+end

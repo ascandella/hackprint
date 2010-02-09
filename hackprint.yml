@@ -1,3 +1,5 @@
+station: brooke
+
 lions:
     authpipe: '/opt/hackprint/authpipe'
     port: '/dev/ttyUSB0'

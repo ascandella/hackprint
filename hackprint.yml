@@ -1,8 +1,13 @@
 lions:
-	pipe:	/opt/hackprint/authpipe
-	serial:	/dev/ttyUSB0
+    authpipe: '/opt/hackprint/authpipe'
+    port: '/dev/ttyUSB0'
+    baud: 9600
+    time: 5
+    pass: haxorz
 
 brooke:
-	pipe:	/Users/echo/Document/Code/workspace/hackprint/authpipe
-	serial: /dev/ttyUSB0
-
+    authpipe: '/Users/echo/Documents/Code/workspace/hackprint/authpipe'
+    port: '/dev/tty.usbserial-A7006SPN'
+    baud: 9600
+    time: 5
+    pass: haxorz

@@ -3,16 +3,17 @@ int ledPin = 9;
 int incomingByte = 0;
 
 void setup() {
+  pinMode(ledPin, OUTPUT);
   // Set up the serial communications
-  Serial.begin(9600);
+    Serial.begin(9600);
 }
 
 void loop() {
   
   if ( Serial.available() > 0 ) {
     incomingByte = Serial.read();
-    analogWrite(ledPin, 200);
+    digitalWrite(ledPin, true);
     delay(incomingByte * 1000);
-    analogWrite(ledPin, 0);
+    digitalWrite(ledPin, false);
   }
 }

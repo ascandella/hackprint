@@ -5,7 +5,9 @@ require 'yaml'
 require 'serialport'
 
 
-@config = YAML.load_file(File.join(File.dirname(__FILE__), '/hackprint.yml'))["brooke"]
+@config = YAML.load_file(File.join(File.dirname(__FILE__), '/hackprint.yml'))
+@config = @config[@config["station"]]
+
 @serial = SerialPort.new( @config["port"], "baud" => @config["baud"], "data_bits" => 8 )
 @open_time = @config["time"].chr
 @password = @config["pass"]

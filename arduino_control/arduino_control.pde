@@ -1,19 +1,19 @@
-int ledPin = 9;
+int strikePin = 9;
 // read off serial port
 int incomingByte = 0;
 
 void setup() {
-  pinMode(ledPin, OUTPUT);
+  pinMode(strikePin, OUTPUT);
   // Set up the serial communications
-    Serial.begin(9600);
+  Serial.begin(9600);
 }
 
 void loop() {
-  
+  // Read a byte off the serial input when ready
   if ( Serial.available() > 0 ) {
     incomingByte = Serial.read();
-    digitalWrite(ledPin, true);
+    digitalWrite(strikePin, true);
     delay(incomingByte * 1000);
-    digitalWrite(ledPin, false);
+    digitalWrite(strikePin, false);
   }
 }

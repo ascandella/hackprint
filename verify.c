@@ -42,6 +42,7 @@ struct fp_dscv_dev *discover_device(struct fp_dscv_dev **discovered_devs)
 int verify(struct fp_dev *dev, struct fp_print_data *data, FILE* authpipe)
 {
 	int r;
+	FILE* authpipe;
 
 	do {
 		struct fp_img *img = NULL;
@@ -60,11 +61,15 @@ int verify(struct fp_dev *dev, struct fp_print_data *data, FILE* authpipe)
 		}
 		switch (r) {
 		case FP_VERIFY_NO_MATCH:
-			printf("NO MATCH!\n");
+			printf("NO MATCH\n");
 			return 0;
 		case FP_VERIFY_MATCH:
-            fprintf(authpipe, PASSWORD);    
-			printf("MATCH!\n");
+			// Write the magic password to the pipe
+		    authpipe = fopen(AUTHPIPE, 'w');
+            fprintf(authpipe, PASSWORD); 
+			fclose(authpipe);
+			
+			printf("Match\n");
 			return 0;
 		case FP_VERIFY_RETRY:
 			printf("Scan didn't quite work. Please try again.\n");
@@ -89,8 +94,6 @@ int main(void)
 	struct fp_dscv_dev **discovered_devs;
 	struct fp_dev *dev;
 	struct fp_print_data *data;
-	
-    FILE* file;
 
 	r = fp_init();
 	if (r < 0) {
@@ -128,17 +131,10 @@ int main(void)
 			"first?\n");
 		goto out_close;
 	}
-    file = fopen(AUTHPIPE, 'w');
-
+	
 	printf("Print loaded. Time to verify!\n");
 	do {
-		char buffer[20];
-
-		verify(dev, data, file);
-		printf("Verify again? [Y/n]? ");
-		fgets(buffer, sizeof(buffer), stdin);
-		if (buffer[0] != '\n' && buffer[0] != 'y' && buffer[0] != 'Y')
-			break;
+		verify(dev, data);
 	} while (1);
 
 	fp_print_data_free(data);

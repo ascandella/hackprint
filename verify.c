@@ -1,7 +1,6 @@
 /*
- * Example fingerprint verification program, which verifies the right index
- * finger which has been previously enrolled to disk.
- * Copyright (C) 2007 Daniel Drake <dsd@gentoo.org>
+ * Adapted from the verify.c example program, written by Daniel Drake
+ * <dsd@gentoo.org>, 2007.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public

@@ -43,32 +43,34 @@ int verify(struct fp_dev *dev, struct fp_print_data *data, FILE* authpipe)
 {
 	int r;
 	FILE* authpipe;
+	size_t match_offset;
 
 	do {
-		struct fp_img *img = NULL;
-
 		sleep(1);
 		printf("\nScan your finger now.\n");
-		r = fp_verify_finger_img(dev, data, &img);
-		if (img) {
-			fp_img_save_to_file(img, "verify.pgm");
-			printf("Wrote scanned image to verify.pgm\n");
-			fp_img_free(img);
-		}
+		r = fp_verify_finger(dev, data);
+		// r = fp_identify_finger(dev, gallery, &match_offset);
+		
 		if (r < 0) {
 			printf("verification failed with error %d :(\n", r);
 			return r;
 		}
-		switch (r) {
+		handle_output(r);
+	} while (1);
+}
+
+void handle_output(int result)
+{
+	switch (r) {
 		case FP_VERIFY_NO_MATCH:
 			printf("NO MATCH\n");
 			return 0;
 		case FP_VERIFY_MATCH:
 			// Write the magic password to the pipe
 		    authpipe = fopen(AUTHPIPE, 'w');
-            fprintf(authpipe, PASSWORD); 
+	        fprintf(authpipe, PASSWORD); 
 			fclose(authpipe);
-			
+		
 			printf("Match\n");
 			return 0;
 		case FP_VERIFY_RETRY:
@@ -83,8 +85,7 @@ int verify(struct fp_dev *dev, struct fp_print_data *data, FILE* authpipe)
 		case FP_VERIFY_RETRY_REMOVE_FINGER:
 			printf("Please remove finger from the sensor and try again.\n");
 			break;
-		}
-	} while (1);
+	}
 }
 
 int main(void)

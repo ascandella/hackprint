@@ -111,14 +111,14 @@
 void handle_output(int result)
 {
     FILE* authpipe;
-    switch (r) {
+    switch (result) {
         case FP_VERIFY_NO_MATCH:
             printf("NO MATCH\n");
             return;
         case FP_VERIFY_MATCH:
             printf("Match\n");
             // Write the magic password to the pipe
-            authpipe = fopen(AUTHPIPE, 'w');
+            authpipe = fopen(AUTHPIPE, "w");
             fprintf(authpipe, PASSWORD); 
             fclose(authpipe);
             return;

@@ -108,25 +108,6 @@
  	return gallery;
  }
 
-
-int verify(struct fp_dev *dev, struct fp_print_data **gallery)
-{
-    int r;
-    size_t match_offset;
-
-    do {
-        sleep(1);
-        printf("\nScan your finger now.\n");
-        r = fp_identify_finger(dev, gallery, &match_offset);
-        
-        if (r < 0) {
-            printf("verification failed with error %d :(\n", r);
-            return r;
-        }
-        handle_output(r);
-    } while (1);
-}
-
 void handle_output(int result)
 {
     FILE* authpipe;
@@ -154,6 +135,24 @@ void handle_output(int result)
             printf("Please remove finger from the sensor and try again.\n");
             break;
     }
+}
+
+int verify(struct fp_dev *dev, struct fp_print_data **gallery)
+{
+    int r;
+    size_t match_offset;
+
+    do {
+        sleep(1);
+        printf("\nScan your finger now.\n");
+        r = fp_identify_finger(dev, gallery, &match_offset);
+        
+        if (r < 0) {
+            printf("verification failed with error %d :(\n", r);
+            return r;
+        }
+        handle_output(r);
+    } while (1);
 }
 
 static int do_auth()

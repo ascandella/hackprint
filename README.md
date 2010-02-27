@@ -29,4 +29,4 @@ This project written for a project involving an electic door strike and USB fing
 ## Circuit Diagram
 
 * Below is a sketch of how my circuit is set up
-![Circuit Diagram](hackprint/circuit-diagram.png)
+* ![Circuit Diagram](http://github.com/sectioneight/hackprint/blob/master/circuit-diagram.png)

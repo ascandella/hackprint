@@ -26,6 +26,8 @@
 #define PASSWORD "haxorz"
 #define AUTHPIPE "/opt/hackprint/authpipe"
 
+// These functions lifted from pam_fprint.c (part of the pam_fprint library)
+// released under the GNU General Public License v2
  static struct fp_print_data **find_dev_and_prints(struct fp_dscv_dev **ddevs,
  	struct fp_dscv_print **prints, struct fp_dscv_dev **_ddev, enum fp_finger **fingers)
  {
@@ -93,7 +95,6 @@ int verify(struct fp_dev *dev, struct fp_print_data **gallery)
     do {
         sleep(1);
         printf("\nScan your finger now.\n");
-        // r = fp_verify_finger(dev, data);
         r = fp_identify_finger(dev, gallery, &match_offset);
         
         if (r < 0) {
@@ -187,9 +188,8 @@ static int do_auth()
         fprintf(stderr, "No fingerprint information available.");
         return 4;
 	}
-    while (true) {
-	    r = verify(dev, gallery);
-    }
+	
+	r = verify(dev, gallery);
  
     // Free up fingreprint information
 	gallery_iter = gallery;

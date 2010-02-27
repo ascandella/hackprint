@@ -26,17 +26,64 @@
 #define PASSWORD "haxorz"
 #define AUTHPIPE "/opt/hackprint/authpipe"
 
-struct fp_dscv_dev *discover_device(struct fp_dscv_dev **discovered_devs)
-{
-    struct fp_dscv_dev *ddev = discovered_devs[0];
-    struct fp_driver *drv;
-    if (!ddev)
-        return NULL;
-    
-    drv = fp_dscv_dev_get_driver(ddev);
-    printf("Found device claimed by %s driver\n", fp_driver_get_full_name(drv));
-    return ddev;
-}
+ static struct fp_print_data **find_dev_and_prints(struct fp_dscv_dev **ddevs,
+ 	struct fp_dscv_print **prints, struct fp_dscv_dev **_ddev, enum fp_finger **fingers)
+ {
+ 	int i = 0, j = 0, err;
+ 	struct fp_dscv_print *print;
+ 	struct fp_dscv_dev *ddev = NULL;
+ 	uint16_t driver_id, driver_id_cur;
+ 	size_t prints_count = 0;
+ 	struct fp_print_data **gallery;
+
+ 	/* TODO: add device selection */
+ 	while (print = prints[i++]) {
+ 		if (!ddev) {
+ 			ddev = fp_dscv_dev_for_dscv_print(ddevs, print);
+ 			driver_id = fp_dscv_print_get_driver_id(print);
+ 			*_ddev = ddev;
+ 		}
+ 		if (ddev)
+ 		{
+ 		    driver_id_cur = fp_dscv_print_get_driver_id(print);
+ 		    if (driver_id_cur == driver_id) {
+ 			    prints_count++;
+ 		    }
+ 		}
+ 	}
+
+ 	if (prints_count == 0) {
+ 	    return NULL;
+ 	}
+
+ 	gallery = malloc(sizeof(*gallery) * (prints_count + 1));
+ 	if (gallery == NULL) {
+ 	    return NULL;
+ 	}
+ 	gallery[prints_count] = NULL;
+ 	*fingers = malloc(sizeof(*fingers) * (prints_count));
+ 	if (*fingers == NULL) {
+ 	    free(gallery);
+ 	    return NULL;
+ 	}
+
+ 	i = 0, j = 0;
+ 	while (print = prints[i++]) {
+ 		driver_id_cur = fp_dscv_print_get_driver_id(print);
+ 		if (driver_id_cur == driver_id) {
+ 			err = fp_print_data_from_dscv_print(print, & (gallery[j]));
+ 			if (err != 0) {
+ 			    gallery[j] = NULL;
+ 			    break;
+ 			}
+ 			(*fingers)[j] = fp_dscv_print_get_finger(print);
+ 			j++;
+ 		}
+ 	}
+
+ 	return gallery;
+ }
+
 
 int verify(struct fp_dev *dev, struct fp_print_data **gallery)
 {
@@ -87,63 +134,79 @@ void handle_output(int result)
     }
 }
 
+static int do_auth()
+{
+    int r;
+	struct fp_dscv_dev **ddevs;
+	struct fp_dscv_print **prints;
+	struct fp_dscv_dev *ddev;
+	struct fp_dscv_print *print;
+	struct fp_dev *dev;
+	struct fp_print_data **gallery, **gallery_iter;
+	enum fp_finger *fingers;
+ 
+	r = fp_init();
+	if (r < 0) {
+        fprintf(stderr, "Could not initialize libfprint.");
+        return -1;
+	}
+ 
+	ddevs = fp_discover_devs();
+	if (!ddevs) {
+        fprintf(stderr, "Could not discover any devices.");
+        return 1;
+	}
+ 
+	prints = fp_discover_prints();
+	if (!prints) {
+		fp_dscv_devs_free(ddevs);
+        fprintf(stderr, "Could not discover any fingerprints.");
+        return 2;
+	}
+ 
+	gallery = find_dev_and_prints(ddevs, prints, &ddev, &fingers);
+	if (!gallery) {
+		fp_dscv_prints_free(prints);
+		fp_dscv_devs_free(ddevs);
+		fprintf(stderr, "Could not locate any suitable fingerprints "
+			"matched with available hardware.");
+        return 3;
+	}
+ 
+	dev = fp_dev_open(ddev);
+	fp_dscv_devs_free(ddevs);
+	fp_dscv_prints_free(prints);
+	if (!dev) {
+		gallery_iter = gallery;
+		while (*gallery_iter) {
+		    fp_print_data_free(*gallery_iter);
+		    gallery_iter++;
+		}
+		free(gallery);
+		free(fingers);	
+        fprintf(stderr, "No fingerprint information available.");
+        return 4;
+	}
+    while (true) {
+	    r = verify(dev, gallery);
+    }
+ 
+    // Free up fingreprint information
+	gallery_iter = gallery;
+	while (*gallery_iter)
+	{
+	    fp_print_data_free(*gallery_iter);
+	    gallery_iter++;
+	}
+	free(gallery);
+	free(fingers);
+	fp_dev_close(dev);
+    return 0;
+}
+
 int main(void)
 {
-    int r = 1;
-    struct fp_dscv_dev *ddev;
-    struct fp_dscv_dev **discovered_devs;
-    struct fp_dev *dev;
-    struct fp_print_data *data;
-
-    r = fp_init();
-    if (r < 0) {
-        fprintf(stderr, "Failed to initialize libfprint\n");
-        exit(1);
-    }
-    fp_set_debug(3);
-
-    discovered_devs = fp_discover_devs();
-    if (!discovered_devs) {
-        fprintf(stderr, "Could not discover devices\n");
-        goto out;
-    }
-
-    ddev = discover_device(discovered_devs);
-    if (!ddev) {
-        fprintf(stderr, "No devices detected.\n");
-        goto out;
-    }
-
-    dev = fp_dev_open(ddev);
-    fp_dscv_devs_free(discovered_devs);
-    if (!dev) {
-        fprintf(stderr, "Could not open device.\n");
-        goto out;
-    }
-
-    printf("Opened device. Loading previously enrolled right index finger "
-        "data...\n");
-
-    r = fp_print_data_load(dev, RIGHT_INDEX, &data);
-    if (r != 0) {
-        fprintf(stderr, "Failed to load fingerprint, error %d\n", r);
-        fprintf(stderr, "Did you remember to enroll your right index finger "
-            "first?\n");
-        goto out_close;
-    }
-    
-    printf("Print loaded. Time to verify!\n");
-    do {
-        verify(dev, data);
-    } while (1);
-
-    fp_print_data_free(data);
-out_close:
-    fp_dev_close(dev);
-out:
-    fp_exit();
-    
-    return r;
+    do_auth();
 }
 
 

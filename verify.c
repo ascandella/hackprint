@@ -28,123 +28,122 @@
 
 struct fp_dscv_dev *discover_device(struct fp_dscv_dev **discovered_devs)
 {
-	struct fp_dscv_dev *ddev = discovered_devs[0];
-	struct fp_driver *drv;
-	if (!ddev)
-		return NULL;
-	
-	drv = fp_dscv_dev_get_driver(ddev);
-	printf("Found device claimed by %s driver\n", fp_driver_get_full_name(drv));
-	return ddev;
+    struct fp_dscv_dev *ddev = discovered_devs[0];
+    struct fp_driver *drv;
+    if (!ddev)
+        return NULL;
+    
+    drv = fp_dscv_dev_get_driver(ddev);
+    printf("Found device claimed by %s driver\n", fp_driver_get_full_name(drv));
+    return ddev;
 }
 
-int verify(struct fp_dev *dev, struct fp_print_data *data, FILE* authpipe)
+int verify(struct fp_dev *dev, struct fp_print_data **gallery)
 {
-	int r;
-	FILE* authpipe;
-	size_t match_offset;
+    int r;
+    size_t match_offset;
 
-	do {
-		sleep(1);
-		printf("\nScan your finger now.\n");
-		r = fp_verify_finger(dev, data);
-		// r = fp_identify_finger(dev, gallery, &match_offset);
-		
-		if (r < 0) {
-			printf("verification failed with error %d :(\n", r);
-			return r;
-		}
-		handle_output(r);
-	} while (1);
+    do {
+        sleep(1);
+        printf("\nScan your finger now.\n");
+        // r = fp_verify_finger(dev, data);
+        r = fp_identify_finger(dev, gallery, &match_offset);
+        
+        if (r < 0) {
+            printf("verification failed with error %d :(\n", r);
+            return r;
+        }
+        handle_output(r);
+    } while (1);
 }
 
 void handle_output(int result)
 {
-	switch (r) {
-		case FP_VERIFY_NO_MATCH:
-			printf("NO MATCH\n");
-			return 0;
-		case FP_VERIFY_MATCH:
-			// Write the magic password to the pipe
-		    authpipe = fopen(AUTHPIPE, 'w');
-	        fprintf(authpipe, PASSWORD); 
-			fclose(authpipe);
-		
-			printf("Match\n");
-			return 0;
-		case FP_VERIFY_RETRY:
-			printf("Scan didn't quite work. Please try again.\n");
-			break;
-		case FP_VERIFY_RETRY_TOO_SHORT:
-			printf("Swipe was too short, please try again.\n");
-			break;
-		case FP_VERIFY_RETRY_CENTER_FINGER:
-			printf("Please center your finger on the sensor and try again.\n");
-			break;
-		case FP_VERIFY_RETRY_REMOVE_FINGER:
-			printf("Please remove finger from the sensor and try again.\n");
-			break;
-	}
+    FILE* authpipe;
+    switch (r) {
+        case FP_VERIFY_NO_MATCH:
+            printf("NO MATCH\n");
+            return 0;
+        case FP_VERIFY_MATCH:
+            // Write the magic password to the pipe
+            authpipe = fopen(AUTHPIPE, 'w');
+            fprintf(authpipe, PASSWORD); 
+            fclose(authpipe);
+        
+            printf("Match\n");
+            return 0;
+        case FP_VERIFY_RETRY:
+            printf("Scan didn't quite work. Please try again.\n");
+            break;
+        case FP_VERIFY_RETRY_TOO_SHORT:
+            printf("Swipe was too short, please try again.\n");
+            break;
+        case FP_VERIFY_RETRY_CENTER_FINGER:
+            printf("Please center your finger on the sensor and try again.\n");
+            break;
+        case FP_VERIFY_RETRY_REMOVE_FINGER:
+            printf("Please remove finger from the sensor and try again.\n");
+            break;
+    }
 }
 
 int main(void)
 {
-	int r = 1;
-	struct fp_dscv_dev *ddev;
-	struct fp_dscv_dev **discovered_devs;
-	struct fp_dev *dev;
-	struct fp_print_data *data;
+    int r = 1;
+    struct fp_dscv_dev *ddev;
+    struct fp_dscv_dev **discovered_devs;
+    struct fp_dev *dev;
+    struct fp_print_data *data;
 
-	r = fp_init();
-	if (r < 0) {
-		fprintf(stderr, "Failed to initialize libfprint\n");
-		exit(1);
-	}
-	fp_set_debug(3);
+    r = fp_init();
+    if (r < 0) {
+        fprintf(stderr, "Failed to initialize libfprint\n");
+        exit(1);
+    }
+    fp_set_debug(3);
 
-	discovered_devs = fp_discover_devs();
-	if (!discovered_devs) {
-		fprintf(stderr, "Could not discover devices\n");
-		goto out;
-	}
+    discovered_devs = fp_discover_devs();
+    if (!discovered_devs) {
+        fprintf(stderr, "Could not discover devices\n");
+        goto out;
+    }
 
-	ddev = discover_device(discovered_devs);
-	if (!ddev) {
-		fprintf(stderr, "No devices detected.\n");
-		goto out;
-	}
+    ddev = discover_device(discovered_devs);
+    if (!ddev) {
+        fprintf(stderr, "No devices detected.\n");
+        goto out;
+    }
 
-	dev = fp_dev_open(ddev);
-	fp_dscv_devs_free(discovered_devs);
-	if (!dev) {
-		fprintf(stderr, "Could not open device.\n");
-		goto out;
-	}
+    dev = fp_dev_open(ddev);
+    fp_dscv_devs_free(discovered_devs);
+    if (!dev) {
+        fprintf(stderr, "Could not open device.\n");
+        goto out;
+    }
 
-	printf("Opened device. Loading previously enrolled right index finger "
-		"data...\n");
+    printf("Opened device. Loading previously enrolled right index finger "
+        "data...\n");
 
-	r = fp_print_data_load(dev, RIGHT_INDEX, &data);
-	if (r != 0) {
-		fprintf(stderr, "Failed to load fingerprint, error %d\n", r);
-		fprintf(stderr, "Did you remember to enroll your right index finger "
-			"first?\n");
-		goto out_close;
-	}
-	
-	printf("Print loaded. Time to verify!\n");
-	do {
-		verify(dev, data);
-	} while (1);
+    r = fp_print_data_load(dev, RIGHT_INDEX, &data);
+    if (r != 0) {
+        fprintf(stderr, "Failed to load fingerprint, error %d\n", r);
+        fprintf(stderr, "Did you remember to enroll your right index finger "
+            "first?\n");
+        goto out_close;
+    }
+    
+    printf("Print loaded. Time to verify!\n");
+    do {
+        verify(dev, data);
+    } while (1);
 
-	fp_print_data_free(data);
+    fp_print_data_free(data);
 out_close:
-	fp_dev_close(dev);
+    fp_dev_close(dev);
 out:
-	fp_exit();
-	
-    fclose(file);
-	return r;
+    fp_exit();
+    
+    return r;
 }
 
 

@@ -28,6 +28,27 @@
 
 // These functions lifted from pam_fprint.c (part of the pam_fprint library)
 // released under the GNU General Public License v2
+ static const char *fingerstr(enum fp_finger finger)
+ {
+ 	const char *names[] = {
+ 		[LEFT_THUMB] = "left thumb",
+ 		[LEFT_INDEX] = "left index",
+ 		[LEFT_MIDDLE] = "left middle",
+ 		[LEFT_RING] = "left ring",
+ 		[LEFT_LITTLE] = "left little",
+ 		[RIGHT_THUMB] = "right thumb",
+ 		[RIGHT_INDEX] = "right index",
+ 		[RIGHT_MIDDLE] = "right middle",
+ 		[RIGHT_RING] = "right ring",
+ 		[RIGHT_LITTLE] = "right little",
+ 	};
+ 	if (finger < LEFT_THUMB || finger > RIGHT_LITTLE) {
+        fprintf(stderr, "Got unknown fingerprint: %d\n", finger);
+ 	    return "UNKNOWN";
+	}
+ 	return names[finger];
+ }
+
  static struct fp_print_data **find_dev_and_prints(struct fp_dscv_dev **ddevs,
  	struct fp_dscv_print **prints, struct fp_dscv_dev **_ddev, enum fp_finger **fingers)
  {
@@ -79,6 +100,7 @@
  			    break;
  			}
  			(*fingers)[j] = fp_dscv_print_get_finger(print);
+            fprintf(stderr, "Got finger: %s\n", fingerstr((*fingers)[j]));
  			j++;
  		}
  	}

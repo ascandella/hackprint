@@ -133,15 +133,14 @@ void handle_output(int result)
     switch (r) {
         case FP_VERIFY_NO_MATCH:
             printf("NO MATCH\n");
-            return 0;
+            return;
         case FP_VERIFY_MATCH:
+            printf("Match\n");
             // Write the magic password to the pipe
             authpipe = fopen(AUTHPIPE, 'w');
             fprintf(authpipe, PASSWORD); 
             fclose(authpipe);
-        
-            printf("Match\n");
-            return 0;
+            return;
         case FP_VERIFY_RETRY:
             printf("Scan didn't quite work. Please try again.\n");
             break;

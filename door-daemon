@@ -14,4 +14,4 @@ options = {
    :monitor    => true
  }
 
- Daemons.run(File.join(File.dirname(__FILE__), 'listener.rb'), options)
+Daemons.run(File.join(File.dirname(__FILE__), 'listener.rb'), options)

@@ -5,8 +5,8 @@ require 'yaml'
 require 'serialport'
 
 
-@config = YAML.load_file(File.join(File.dirname(__FILE__), '/hackprint.yml'))
-@config = @config[@config["station"]]
+config = YAML.load_file(File.join(File.dirname(__FILE__), '/hackprint.yml'))
+@config = config[config["station"]]
 
 begin
   @serial = SerialPort.new( @config["port"], "baud" => @config["baud"], "data_bits" => 8 )
@@ -15,6 +15,7 @@ rescue Exception => ex
   STDERR.puts ex
   Process.exit
 end
+
 @open_time = @config["time"].chr
 @password = @config["pass"]
 
@@ -29,7 +30,6 @@ loop do
         STDERR.puts "Caught error trying to unlock door: #{ex.inspect}"
       end
     end
-    f.close
   end
 end
 

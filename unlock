@@ -5,8 +5,8 @@ require 'rubygems'
 require 'yaml'
 
 
-@config = YAML.load_file(File.join(File.dirname(__FILE__), '/hackprint.yml'))
-@config = @config[@config["station"]]
+config = YAML.load_file(File.join(File.dirname(__FILE__), '/hackprint.yml'))
+@config = config[config["station"]]
 
 @password = @config["pass"]
 

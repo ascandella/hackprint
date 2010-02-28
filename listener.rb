@@ -11,7 +11,8 @@ require 'serialport'
 begin
   @serial = SerialPort.new( @config["port"], "baud" => @config["baud"], "data_bits" => 8 )
 rescue Exception => ex
-  STDERR.puts "Could not open serial port. Check settings."
+  STDERR.puts "Could not open serial port (#{@config['port']}). Check settings."
+  STDERR.puts ex
   Process.exit
 end
 @open_time = @config["time"].chr

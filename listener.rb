@@ -3,16 +3,19 @@
 require 'rubygems'
 require 'yaml'
 require 'serialport'
+require 'logger'
 
 
 config = YAML.load_file(File.join(File.dirname(__FILE__), '/hackprint.yml'))
 @config = config[config["station"]]
+logfile = @config['log_file'] || STDERR
+@log = Logger.new(logfile)
 
 begin
   @serial = SerialPort.new( @config["port"], "baud" => @config["baud"], "data_bits" => 8 )
 rescue Exception => ex
-  STDERR.puts "Could not open serial port (#{@config['port']}). Check settings."
-  STDERR.puts ex
+  @log.error "Could not open serial port (#{@config['port']}). Check settings:"
+  @log.error ex.to_s
   Process.exit
 end
 
@@ -25,10 +28,12 @@ loop do
     if line == @password
       begin
         @serial.write(@open_time)
-        puts "Unlock"
+        @log.info "Unlock"
       rescue Exception => ex
-        STDERR.puts "Caught error trying to unlock door: #{ex.inspect}"
+        @log.error "Caught error trying to unlock door: #{ex.inspect}"
       end
+    else
+      @log.info "Received bad auth token: '#{line}'"
     end
   end
 end

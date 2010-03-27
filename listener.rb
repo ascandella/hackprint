@@ -27,13 +27,13 @@ loop do
     line = f.readline.chomp
     if line == @password
       begin
-        @serial.write(@open_time)
         @log.info "Unlock"
+        @serial.write(@open_time)
       rescue Exception => ex
         @log.error "Caught error trying to unlock door: #{ex.inspect}"
       end
     else
-      @log.info "Received bad auth token: '#{line}'"
+      @log.warn "Received bad auth token: '#{line}'"
     end
   end
 end
